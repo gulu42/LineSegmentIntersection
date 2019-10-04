@@ -22,9 +22,6 @@ class Sweeper:
         self.final_intersection_points = []
         self.sweep_line_status = SweepStatus()
 
-    def sorting_key(item):
-
-
     def get_next_event_point():
         possible_event_points = []
         try:
@@ -47,6 +44,32 @@ class Sweeper:
 
         possible_event_points = sorted(possible_event_points,key = lambda x: x[0].y) # get earliest point going by y coordinate
 
+        if len(possible_event_points) == 0:
+            raise "SweepComplete"
+
+        next_point = possible_event_points[0]
+        if next_point[1] == "new_line":
+            return (line_set.pop(),"new_line")
+        elif next_point[1] == "old_line":
+            return (lines_visited.pop(),"old_line")
+        else:
+            return (intersection_points.pop(),"intersection_point")
 
 
-    # def run():
+    def run():
+        try:
+            next_point = get_next_event_point()
+        except "SweepComplete":
+            print "Sweeping complete"
+            return self.final_intersection_points
+
+        if next_point[1] == "new_line":
+            new_intersections = sweep_line_status.add_line(next_point[0])
+        elif next_point[1] == "old_line":
+            new_intersections = sweep_line_status.remove_line(next_point[0])
+        else:
+            new_intersections = sweep_line_status.intersection_point(next_point[0])
+
+# update sweepline properly and i need the seperate class to calculate the intersection points for me
+
+# add self everywhere
