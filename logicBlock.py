@@ -3,16 +3,19 @@ from utils import *
 
 class SweepStatus:
     def __init__(self):
-        pass
+        self.temp_point = Point(1,2)
 
     def add_line(self,l): # return an iterable
-        pass
+        print("Adding line ",l)
+        return [self.temp_point]
 
     def remove_line(self,l):
-        pass
+        print("Removing line ",l)
+        return [self.temp_point]
 
     def intersection_point(self,p):
-        pass
+        print("Reached intersection point ",p)
+        return [self.temp_point]
 
 class Sweeper:
     def __init__(self, file_name = "data_1.txt"):
@@ -21,55 +24,67 @@ class Sweeper:
         self.intersection_points = IntersectionPointsSet()
         self.final_intersection_points = []
         self.sweep_line_status = SweepStatus()
+        print(">>>>>>> ",self.line_set)
+        print("Initialized sweeper")
 
-    def get_next_event_point():
+    def get_next_event_point(self):
         possible_event_points = []
         try:
-            var = line_set.peek() # newest element sorted by top point
+            var = self.line_set.peek() # newest element sorted by top point
             possible_event_points.append((var.top_point,"new_line"))
-        except "EmptyCollectionException":
+        except EmptyCollectionException:
             pass
 
         try:
-            var = lines_visited.peek()
+            var = self.lines_visited.peek()
             possible_event_points.append((var.btm_point,"old_line"))
-        except "EmptyCollectionException":
+        except EmptyCollectionException:
             pass
 
         try:
-            var = intersection_points.peek()
+            var = self.intersection_points.peek()
             possible_event_points.append((var,"intersection_point"))
-        except "EmptyCollectionException":
+        except EmptyCollectionException:
             pass
 
-        possible_event_points = sorted(possible_event_points,key = lambda x: x[0].y) # get earliest point going by y coordinate
+        possible_event_points = sorted(possible_event_points,key = lambda x: x[0].y,reverse = True) # get earliest point going by y coordinate (highest y)
 
         if len(possible_event_points) == 0:
-            raise "SweepComplete"
+            raise SweepCompleteException
 
         next_point = possible_event_points[0]
         if next_point[1] == "new_line":
-            return (line_set.pop(),"new_line")
+            return (self.line_set.pop(),"new_line")
         elif next_point[1] == "old_line":
-            return (lines_visited.pop(),"old_line")
+            return (self.lines_visited.pop(),"old_line")
         else:
-            return (intersection_points.pop(),"intersection_point")
+            return (self.intersection_points.pop(),"intersection_point")
 
 
-    def run():
-        try:
-            next_point = get_next_event_point()
-        except "SweepComplete":
-            print "Sweeping complete"
-            return self.final_intersection_points
+    def run(self):
+        count = 1
+        while 1:
+            try:
+                next_point = self.get_next_event_point()
+            except SweepCompleteException:
+                print("Sweeping complete")
+                return self.final_intersection_points
 
-        if next_point[1] == "new_line":
-            new_intersections = sweep_line_status.add_line(next_point[0])
-        elif next_point[1] == "old_line":
-            new_intersections = sweep_line_status.remove_line(next_point[0])
-        else:
-            new_intersections = sweep_line_status.intersection_point(next_point[0])
+            if next_point[1] == "new_line":
+                new_intersections = self.sweep_line_status.add_line(next_point[0])
+                self.lines_visited.add([next_point[0]])
+            elif next_point[1] == "old_line":
+                new_intersections = self.sweep_line_status.remove_line(next_point[0])
+            else:
+                new_intersections = self.sweep_line_status.intersection_point(next_point[0])
 
-# update sweepline properly and i need the seperate class to calculate the intersection points for me
-
-# add self everywhere
+            print(">>>>>>>>> PASS",count,"<<<<<<<<<(start)")
+            print(self.line_set)
+            print()
+            print(self.lines_visited)
+            print()
+            print(self.intersection_points)
+            print(">>>>>>>>> PASS",count,"<<<<<<<<<(end)\n\n")
+            count += 1
+            # self.intersection_points.add(new_intersections)
+            # self.final_intersection_points.extend(new_intersections)
