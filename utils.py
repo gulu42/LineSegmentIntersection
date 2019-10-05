@@ -50,8 +50,57 @@ class Line:
             self.top_point = p2
             self.btm_point = p1
 
+        x1,y1 = self.top_point.x,self.top_point.y
+        x2,y2 = self.btm_point.x,self.btm_point.y
+
+        if x1 == x2: #points perpendicular to the x axis
+            self.m = None
+            self.c = None
+        else:
+            self.m = (y2 - y1 + 0.0)/(x2 - x1)
+            self.c = (-1 * x1 * self.m) + y1
+
+    # use within the class, to check if a point on the line lies within the segment given it lies on the line
+    def point_on_segment(self,p):
+        if self.top_point.x == self.btm_point.x: # a verticle line
+            if (self.top_point.y > p.y) and (self.btm_point.y < p.y):
+                return True
+        elif self.top_point.x < self.btm_point.x: #downwards, not using slope since that might be null
+            if (p.x >= self.top_point.x) and (p.x <= self.btm_point.x):
+                return True
+        else:
+            if (p.x <= self.top_point.x) and (p.x >= self.btm_point.y):
+                return True
+        return False
+
     def intersection(self,l2):
-        print("Search for intersection point")
+        m1,c1 = self.m,self.c
+        m2,c2 = l2.m,l2.c
+
+        if m1 == m2: # parallel lines
+            return None
+
+        # Now deal with lines that are parallel to the y-axis
+        # Can have only one such line here (l)
+        if m1 is None or m2 is None:
+            if m1 is None:
+                l = l2
+                l_perp = self
+            elif m2 is None:
+                l = self
+                l_perp = l2
+            prop_x = l_perp.top_point.x
+            prop_y = (l.m * prop_x) + l.c
+
+        else:
+            prop_x = -1 * ((c1 - c2 + 0.0)/(m1 - m2))
+            prop_y = (m1 * prop_x) + c1
+
+        prop_point = Point(prop_x,prop_y)
+        if self.point_on_segment(prop_point) and l2.point_on_segment(prop_point):
+            return prop_point
+        else:
+            return None
 
     def __str__(self):
         return "Line: " + str(self.top_point) + " ; " + str(self.btm_point)

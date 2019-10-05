@@ -4,13 +4,24 @@ from utils import *
 class SweepStatus:
     def __init__(self):
         self.temp_point = Point(1,2)
+        self.lines_list = []
 
-    def add_line(self,l): # return an iterable
-        print("Adding line ",l)
+    def add_line(self,new_l): # return an iterable
+        print("Adding line ",new_l)
+        # found_greater = False
+        # i = 0
+        # for i in range(len(self.lines_list)):
+        #     l = self.lines_list[i]
+        #     if
+        #
+        # self.lst.append(l)
+        # if len(self.lst) == 2:
+        #     print("><><><><><><><>< Intersection Point: ", self.lst[0].intersection(l))
         return [self.temp_point]
 
     def remove_line(self,l):
         print("Removing line ",l)
+        self
         return [self.temp_point]
 
     def intersection_point(self,p):
