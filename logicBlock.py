@@ -1,4 +1,5 @@
 from utils import *
+from drawing_functions import draw_sweep_line
 # not a very good practice but its okay for now
 
 class SweepStatus:
@@ -84,10 +85,13 @@ class Sweeper:
             if next_point[1] == "new_line":
                 new_intersections = self.sweep_line_status.add_line(next_point[0])
                 self.lines_visited.add([next_point[0]])
+                draw_sweep_line(next_point[0].top_point.y)
             elif next_point[1] == "old_line":
                 new_intersections = self.sweep_line_status.remove_line(next_point[0])
+                draw_sweep_line(next_point[0].btm_point.y)
             else:
                 new_intersections = self.sweep_line_status.intersection_point(next_point[0])
+                draw_sweep_line(next_point[0].y)
 
             print(">>>>>>>>> PASS",count,"<<<<<<<<<(start)")
             print(self.line_set)
