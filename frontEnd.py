@@ -13,10 +13,17 @@ py = 0
 
 fh = open("data_files/temp_data.txt","w+")
 
+def draw_point(x,y):
+   c = 'deep pink'
+   size = 3
+   x1, y1 = ( x - size ), ( y - size )
+   x2, y2 = ( x + size ), ( y + size )
+   config.drawing_board.create_oval( x1, y1, x2, y2, fill = c )
+
 def empty_event(event):
    pass
 
-def draw_point(event):
+def input_lines(event):
    python_green = "#476042"
    global points_modulo,px,py
 
@@ -34,50 +41,57 @@ def draw_point(event):
       fh.write(str(px) + " " + str(py) + " " + str(event.x) + " " + str(event.y) + "\n")
       # write the line correcting for x and y
 
-def button_clicked():
-   print("Button was pressed")
+def draw_sweep_line(p):
+   config.drawing_board.create_line(0,p.y,config.canvas_width-1,p.y,fill="green")
+   draw_point(p.x,p.y)
 
-def run_eval():
+def run_eval(button_obj):
+
+   # hide the button after its been clicked
+   button_obj.pack_forget() #passed as param
    print("Evaluation running")
    fh.close()
+
+   # sweep_obj = Sweeper("temp_testing.txt")
    sweep_obj = Sweeper("temp_data.txt")
    sweep_obj.run()
    print("Eval complete. Running animation")
    print(config.sweep_y)
+
    delay = 0
+   delay_amount =200
+   num_artifacts = 2#drawing two things and the first one is the line
    n = config.drawing_board.create_oval(0,0,1,1)
-   for y in config.sweep_y:
-      config.drawing_board.after(delay,config.drawing_board.create_line,0,y,config.canvas_width-1,y)
-      n += 1
+   for p in config.sweep_y:
+      print(p)
+      config.drawing_board.after(delay,draw_sweep_line,p)
+      n += num_artifacts
       print(n)
-      delay += 1000
-      config.drawing_board.after(delay,config.drawing_board.delete,n)
-      delay += 1000
-      # sweep_line = config.drawing_board.create_line(0,y,config.canvas_width-1,y)
-      # print(sweep_line)
-      # time.sleep(time_sec)
-      # config.drawing_board.after(time_sec*1000,config.drawing_board.delete,sweep_line)
-      # config.drawing_board.after(time_sec*1000,None)
-      # print("Deleting line",sweep_line)
-      # config.drawing_board.delete(sweep_line)
+      delay += delay_amount
+      config.drawing_board.after(delay,config.drawing_board.delete,n - (num_artifacts - 1))
+      delay += delay_amount
    config.sweep_line = []
    print("Animation complete")
-   # sys.exit(0)
 
+def temp_testing(event):
+   print("entered")
+   fh_temp = open("data_files/temp_testing.txt","r")
+   t = fh_temp.readlines()
+   for row in t:
+      x1,y1,x2,y2 = map(float,row.split(' '))
+      config.drawing_board.create_line(x1,y1,x2,y2)
+      print("drawing line:",x1,y1,x2,y2)
+   fh_temp.close()
+   run_eval()
+
+# Draw board
 config.master.title("Line Segment Intersection")
-# drawing_board = Canvas(master,
-#            width=canvas_width,
-#            height=canvas_height) # create a canvas
-# drawing_board.pack(expand = YES, fill = BOTH)
-config.drawing_board.bind("<Button-1>",draw_point)
+config.drawing_board.bind("<Button-1>",input_lines)
+# config.drawing_board.bind("<Button-1>",temp_testing)
 
-start_button = Button(config.master,text = "Start Evaluation",command = run_eval)
+start_button = Button(config.master,text = "Start Evaluation")
+start_button.configure(command = lambda: run_eval(start_button))
 start_button.pack(side = LEFT)
+# this is so that the button can be hidden after clicking
 
 mainloop()
-
-
-# if __name__ == "__main__":
-#     data_file = "data_2.txt"
-#     sweep_obj = Sweeper(data_file)
-#     sweep_obj.run()

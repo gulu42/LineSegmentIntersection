@@ -1,33 +1,157 @@
 from utils import *
 from drawing_functions import draw_sweep_line
-# not a very good practice but its okay for now
+import bisect
+import sys
+import math
+
+class SweepStatusEntry:
+    def __init__(self,l):
+        # have a line and the point by which it needs to be sorted
+        self.l = l
+
+    def __str__(self):
+        return "SwapStatusEntry: " + str(self.l)
+
+    # define comparision operations to keep in the sweep status entry
+    def __eq__(self,other):
+        if (self.l == other.l):
+            return True
+        return False
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
+
+    def __lt__(self,other):
+        if check_orientation(other.l.top_point,self.l.top_point,other.l.btm_point) == ANTICLOCKWISE:
+            return True
+        return False
+
+    def __gt__(self,other):
+        if check_orientation(other.l.top_point,self.l.top_point,other.l.btm_point) == CLOCKWISE:
+            return True
+        return False
 
 class SweepStatus:
     def __init__(self):
-        self.temp_point = Point(1,2)
         self.lines_list = []
+        # all lines as seen by the sweep line
+
+    def check_intersection(self,l_index,direction):
+        res = []
+        print("Looking for intersection at index",l_index," direction =",direction)
+        cur = l_index #the index of the line which we are checking
+        if direction == "left":
+            cur = l_index - 1
+            while cur >= 0:
+                p = intersection_point(self.lines_list[l_index].l,self.lines_list[cur].l)
+                if p is not None:
+                    res.append(IntersectionPoint(p,self.lines_list[cur].l,self.lines_list[l_index].l))
+                else:
+                    break
+                cur -= 1
+
+        else: # direction is "right"
+            cur = l_index + 1
+            while cur <= len(self.lines_list)-1:
+                p = intersection_point(self.lines_list[l_index].l,self.lines_list[cur].l)
+                if p is not None:
+                    res.append(IntersectionPoint(p,self.lines_list[l_index].l,self.lines_list[cur].l))
+                else:
+                    break
+                cur += 1
+        print("Found intersection points: ",res)
+        return res
 
     def add_line(self,new_l): # return an iterable
         print("Adding line ",new_l)
-        # found_greater = False
-        # i = 0
-        # for i in range(len(self.lines_list)):
-        #     l = self.lines_list[i]
-        #     if
-        #
-        # self.lst.append(l)
-        # if len(self.lst) == 2:
-        #     print("><><><><><><><>< Intersection Point: ", self.lst[0].intersection(l))
-        return [self.temp_point]
+        res = []
+
+        # insert new one in place
+        new_entry = SweepStatusEntry(new_l)
+
+        if len(self.lines_list) == 2:
+            print(">> Comparing sweep line stuff <<")
+
+        new_index = bisect.bisect(self.lines_list,new_entry)
+        print(new_index)
+        self.lines_list = self.lines_list[:new_index] + [new_entry] + self.lines_list[new_index:]
+        print("lines list after adding")
+        for i in self.lines_list:
+            print(i)
+            print()
+
+        res.extend(self.check_intersection(new_index,"left"))
+        res.extend(self.check_intersection(new_index,"right"))
+
+        return res
 
     def remove_line(self,l):
         print("Removing line ",l)
-        self
-        return [self.temp_point]
+        res = []
 
-    def intersection_point(self,p):
-        print("Reached intersection point ",p)
-        return [self.temp_point]
+        l_index = -1
+        for i in range(len(self.lines_list)):
+            if self.lines_list[i].l == l:
+                l_index = i
+                break
+        if l_index == -1:
+            return res
+
+        # remove the line found
+        self.lines_list = self.lines_list[:l_index] + self.lines_list[l_index+1:]
+
+        # check for new intersections
+        if(len(self.lines_list) != 0):
+            res.extend(self.check_intersection(l_index-1,"right"))
+            # new l_index is the one that was on the right
+
+        return res
+
+    def intersection_point(self,ipt):
+        print("Reached intersection point ",ipt)
+        print("hulala")
+        res = []
+
+        l1_index = bisect.bisect_left(self.lines_list,SweepStatusEntry(ipt.l1))
+        if (l1_index == len(self.lines_list)) or (SweepStatusEntry(ipt.l1) != self.lines_list[l1_index]):
+            return res
+
+        sw_l1 = SweepStatusEntry(ipt.l1)
+        sw_l2 = SweepStatusEntry(ipt.l2)
+
+        if sw_l2 < sw_l1:
+            l2_index = l1_index - 1
+        else:
+            l2_index = l1_index + 1
+        if self.lines_list[l2_index] != SweepStatusEntry(ipt.l2):
+            print("Something is wrong!!")
+            sys.exit(0)
+
+        print("Swapping indices: ",l1_index,l2_index)
+        print("Lines before swapping: ")
+        print(self.lines_list[l1_index])
+        print(self.lines_list[l2_index])
+
+        temp = self.lines_list[l1_index]
+        self.lines_list[l1_index] = self.lines_list[l2_index]
+        self.lines_list[l2_index] = temp
+
+        print("Lines after swapping: ")
+        print(self.lines_list[l1_index])
+        print(self.lines_list[l2_index])
+
+        res.extend(self.check_intersection(l1_index,"left"))
+        res.extend(self.check_intersection(l2_index,"right"))
+
+        return res
+
+    def __str__(self):
+        s = "--- Sweep Line Status: ---\n"
+        for i in self.lines_list:
+            s += str(i)
+            s += " ;\n"
+        s += "-----------------"
+        return s
 
 class Sweeper:
     def __init__(self, file_name = "data_1.txt"):
@@ -55,7 +179,7 @@ class Sweeper:
 
         try:
             var = self.intersection_points.peek()
-            possible_event_points.append((var,"intersection_point"))
+            possible_event_points.append((var.ipt,"intersection_point"))
         except EmptyCollectionException:
             pass
 
@@ -85,13 +209,16 @@ class Sweeper:
             if next_point[1] == "new_line":
                 new_intersections = self.sweep_line_status.add_line(next_point[0])
                 self.lines_visited.add([next_point[0]])
-                draw_sweep_line(next_point[0].top_point.y)
+                draw_sweep_line(next_point[0].top_point)
             elif next_point[1] == "old_line":
                 new_intersections = self.sweep_line_status.remove_line(next_point[0])
-                draw_sweep_line(next_point[0].btm_point.y)
+                draw_sweep_line(next_point[0].btm_point)
             else:
                 new_intersections = self.sweep_line_status.intersection_point(next_point[0])
-                draw_sweep_line(next_point[0].y)
+                draw_sweep_line(next_point[0].ipt)
+
+            self.intersection_points.add(new_intersections)
+            self.final_intersection_points.extend([x.ipt for x in new_intersections])
 
             print(">>>>>>>>> PASS",count,"<<<<<<<<<(start)")
             print(self.line_set)
@@ -99,7 +226,11 @@ class Sweeper:
             print(self.lines_visited)
             print()
             print(self.intersection_points)
+            print()
+            print(self.sweep_line_status)
             print(">>>>>>>>> PASS",count,"<<<<<<<<<(end)\n\n")
             count += 1
-            # self.intersection_points.add(new_intersections)
-            # self.final_intersection_points.extend(new_intersections)
+
+        print("$$$$$ Final Intersection Points $$$$$")
+        for p in self.final_intersection_points:
+            print(p)

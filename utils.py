@@ -1,12 +1,10 @@
-# sorting functions
-def key_lines_end_point_y(l):
-    return l.btm_point.y
+import math
+import sys
+from decimal import *
 
-def key_lines_start_point_y(l):
-    return l.top_point.y
-
-def key_points_y(p):
-    return p.y
+COLINEAR = 0
+CLOCKWISE = 1
+ANTICLOCKWISE = 2
 
 class EmptyCollectionException(BaseException):
     def __init__(self):
@@ -16,6 +14,81 @@ class SweepCompleteException(BaseException):
     def __init__(self):
         self.args = "Sweep Complete"
 
+# --------------------- sorting functions ---------------------
+def key_lines_end_point_y(l):
+    return l.btm_point.y
+
+def key_lines_start_point_y(l):
+    return l.top_point.y
+
+def key_points_y(p):
+    return p.y
+
+# --------------------- other functions ---------------------
+def get_round_decimal(x):
+    return round(Decimal.from_float(x+0.0),2)
+
+# Derived from the slopes of the lines
+def check_orientation(p,q,r):
+    val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y)
+
+    if val == 0:
+        return COLINEAR
+    elif val > 0:
+        return CLOCKWISE
+    else:
+        return ANTICLOCKWISE
+
+def intersection_point(l1,l2):
+
+    print(">>>>>> Entered intersection point calc <<<<<<")
+
+    # Find the orientations of the four points
+    o1 = check_orientation(l1.top_point,l1.btm_point,l2.top_point)
+    o2 = check_orientation(l1.top_point,l1.btm_point,l2.btm_point)
+
+    o3 = check_orientation(l2.top_point,l2.btm_point,l1.top_point)
+    o4 = check_orientation(l2.top_point,l2.btm_point,l1.btm_point)
+
+    print("Orientations: ",o1,o2,o3,o4)
+
+    # general case
+    if (o1 != o2) and (o3 != o4):
+        print("Lookinf for an intersection point")
+        # find intersection point
+        m1,c1 = l1.m,l1.c
+        m2,c2 = l2.m,l2.c
+
+        if m1 == m2: # parallel lines
+            return None
+
+        # Now deal with lines that are parallel to the y-axis
+        # Can have only one such line here (l)
+        if m1 is None or m2 is None:
+            if m1 is None:
+                l = l2
+                l_perp = l1
+            elif m2 is None:
+                l = l1
+                l_perp = l2
+            prop_x = l_perp.top_point.x
+            prop_y = (l.m * prop_x) + l.c
+
+        else:
+            prop_x = -1 * ((c1 - c2 + 0.0)/(m1 - m2))
+            prop_y = (m1 * prop_x) + c1
+
+        return Point(prop_x,prop_y)
+
+    # special case
+    if o1 == COLINEAR or o2 == COLINEAR or o3 == COLINEAR or o4 == COLINEAR:
+        print("Special case, haven't dealt with it")
+        # sys.exit(0)
+
+    return None
+
+
+# --------------------- Geometric Artifacts ---------------------
 class Point:
     def __init__(self,x,y):
         self.x = x
@@ -25,7 +98,9 @@ class Point:
         return "Point: (" + str(self.x) + ", " + str(self.y) + ")"
 
     def __eq__(self,other):
-        if (self.x == other.x) and (self.y == other.y):
+        x1,y1 = get_round_decimal(self.x),get_round_decimal(self.y)
+        x2,y2 = get_round_decimal(other.x),get_round_decimal(other.y)
+        if (x1 == x2) and (y1 == y2):
             return True
         return False
 
@@ -60,48 +135,6 @@ class Line:
             self.m = (y2 - y1 + 0.0)/(x2 - x1)
             self.c = (-1 * x1 * self.m) + y1
 
-    # use within the class, to check if a point on the line lies within the segment given it lies on the line
-    def point_on_segment(self,p):
-        if self.top_point.x == self.btm_point.x: # a verticle line
-            if (self.top_point.y > p.y) and (self.btm_point.y < p.y):
-                return True
-        elif self.top_point.x < self.btm_point.x: #downwards, not using slope since that might be null
-            if (p.x >= self.top_point.x) and (p.x <= self.btm_point.x):
-                return True
-        else:
-            if (p.x <= self.top_point.x) and (p.x >= self.btm_point.y):
-                return True
-        return False
-
-    def intersection(self,l2):
-        m1,c1 = self.m,self.c
-        m2,c2 = l2.m,l2.c
-
-        if m1 == m2: # parallel lines
-            return None
-
-        # Now deal with lines that are parallel to the y-axis
-        # Can have only one such line here (l)
-        if m1 is None or m2 is None:
-            if m1 is None:
-                l = l2
-                l_perp = self
-            elif m2 is None:
-                l = self
-                l_perp = l2
-            prop_x = l_perp.top_point.x
-            prop_y = (l.m * prop_x) + l.c
-
-        else:
-            prop_x = -1 * ((c1 - c2 + 0.0)/(m1 - m2))
-            prop_y = (m1 * prop_x) + c1
-
-        prop_point = Point(prop_x,prop_y)
-        if self.point_on_segment(prop_point) and l2.point_on_segment(prop_point):
-            return prop_point
-        else:
-            return None
-
     def __str__(self):
         return "Line: " + str(self.top_point) + " ; " + str(self.btm_point)
 
@@ -113,6 +146,8 @@ class Line:
     def __ne__(self,other):
         return not self.__eq__(other)
 
+
+# --------------------- Collections ---------------------
 # The set of input lines, read out of the file
 class LineSet:
     def __init__(self,file_name):
@@ -128,9 +163,6 @@ class LineSet:
             s = fh.readline()
         self.lines = sorted(self.lines,key = key_lines_start_point_y,reverse = True)
         print("Line set generated. Size = ",len(self.lines))
-
-    def get_len(self):
-        return len(self.lines) # ideally take care of this in peek, do that later
 
     def peek(self):
         if len(self.lines) == 0:
@@ -191,18 +223,42 @@ class VisitedLineSet(SortedCollection):
         s += "-----------------"
         return s
 
+class IntersectionPoint:
+    def __init__(self,p,l1,l2):
+        self.ipt = p
+        self.l1 = l1 # insert l1 as line on the left
+        self.l2 = l2 # insert l2 as line on the right
+
+    def key(self):
+        return self.ipt.y
+        # these points are sorted by y-coordinate
+
+    def __str__(self):
+        return ">>Intersection Point<<\n" + str(self.ipt) + "\n" + str(self.l1) + "\n" + str(self.l2)
+
+    def __eq__(self,other):
+        # if self.ipt == other.ipt and self.l1 == other.l1 and self.l2 == other.l2:
+        if self.ipt == other.ipt:
+            return True
+        return False
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
+
 class IntersectionPointsSet(SortedCollection):
     def __init__(self):
         super().__init__()
 
     def add(self,l):
-        self.items.extend(l)
-        self.items = sorted(self.items,key = key_points_y,reverse = True)
+        for i in l:
+            if i not in self.items:
+                self.items.append(i)
+        self.items = sorted(self.items,key = lambda x: x.key(),reverse = True)
 
     def __str__(self):
         s = "--- Intersection Points Set: ---\n"
         for i in self.items:
-            s += str(i)
+            s += str(i.ipt)
             s += " ;\n"
         s += "-----------------"
         return s
