@@ -1,6 +1,7 @@
 import math
 import sys
 from decimal import *
+import bisect
 
 COLINEAR = 0
 CLOCKWISE = 1
@@ -251,11 +252,13 @@ class IntersectionPoint:
 class IntersectionPointsSet(SortedCollection):
     def __init__(self):
         super().__init__()
+        self.all_visited_points = []
 
     def add(self,l):
         for i in l:
-            if i not in self.items:
+            if i not in self.all_visited_points:
                 self.items.append(i)
+                self.all_visited_points.append(i)
         self.items = sorted(self.items,key = lambda x: x.key(),reverse = True)
 
     def __str__(self):

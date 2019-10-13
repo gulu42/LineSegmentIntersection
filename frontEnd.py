@@ -11,6 +11,8 @@ from optparse import OptionParser
 points_modulo = 0
 px = 0
 py = 0
+num = 0
+epsi = 0.1
 
 INP_FILE = "data_files/input_data.txt"
 
@@ -40,7 +42,7 @@ def input_lines(event):
       points_modulo = 1
    else:
       points_modulo = 0
-      config.drawing_board.create_line(px,py,event.x,event.y)
+      config.drawing_board.create_line(px+epsi,py+epsi,event.x+epsi,event.y+epsi)
       fh.write(str(px) + " " + str(py) + " " + str(event.x) + " " + str(event.y) + "\n")
       # write the line correcting for x and y
 
@@ -56,7 +58,8 @@ def run_eval():
    sweep_obj = Sweeper(INP_FILE)
    sweep_obj.run()
    print("Eval complete. Running animation")
-   print(config.sweep_y)
+   for p in config.sweep_y:
+      print(p)
 
    delay = 0
    delay_amount =200
@@ -82,20 +85,45 @@ def clear_canvas():
    INP_FILE = "data_files/input_data.txt"
    fh = open(INP_FILE,"w")
 
+   global points_modulo
+   points_modulo = 0
+
    config.drawing_board.delete("all")
 
    config.sweep_y = []
 
+def save_input():
+   global num
+
+   print("Inside here")
+   print("num = ",num)
+
+   with open("data_files/input_data.txt") as f:
+      with open("data_files/examples/tc_"+str(num)+".txt","w") as f1:
+         for l in f:
+            print(l)
+            f1.write(l)
+
+   clear_canvas()
+   num += 1
+
 if __name__ == "__main__":
+
 
    parser = OptionParser()
 
    parser.add_option('--inp',dest='inp_file',type=str,help='File from which input is to be loaded')
+   parser.add_option('-n',dest='test_case_num',type=int)
 
    options, otherjunk = parser.parse_args(sys.argv[1:])
    if len(otherjunk) != 0:
        raise Exception('Command line input not understood: ' + str(otherjunk))
    print(options.inp_file,type(options.inp_file))
+
+   if options.test_case_num is None:
+      num = 0
+   else:
+      num = options.test_case_num
 
    # Draw board
    config.master.title("Line Segment Intersection")
@@ -108,14 +136,18 @@ if __name__ == "__main__":
    clear_all_button = Button(config.master,text = "Clear Screen",command = clear_canvas)
    clear_all_button.pack(side = LEFT)
 
+   print(options.test_case_num)
+
+   save_button = Button(config.master,text = "Save Input",command = save_input)
+   save_button.pack(side = LEFT)
 
    if options.inp_file is None:
       print("loading from gui")
       mainloop()
    else:
       print("loading from file")
-      load_file = "data_files/bad_cases/" + options.inp_file
-      # load_file = "data_files/examples/" + options.inp_file
+      # load_file = "data_files/bad_cases/" + options.inp_file
+      load_file = "data_files/examples/" + options.inp_file
       fh_temp = open(load_file ,"r")
       t = fh_temp.readlines()
       for row in t:

@@ -36,6 +36,13 @@ class SweepStatus:
         self.lines_list = []
         # all lines as seen by the sweep line
 
+    def find_line(self,l):
+        for i in range(len(self.lines_list)):
+            if self.lines_list[i].l == l:
+                return i
+
+        return None
+
     def check_intersection(self,l_index,direction):
         res = []
         print("Looking for intersection at index",l_index," direction =",direction)
@@ -59,7 +66,11 @@ class SweepStatus:
                 else:
                     break
                 cur += 1
-        print("Found intersection points: ",res)
+        s = "Found Intersection Point(s): "
+        for l in res:
+            s += (str(l) + '\n')
+        s += "%%%%%%%%%%"
+        print(s)
         return res
 
     def add_line(self,new_l): # return an iterable
@@ -113,24 +124,36 @@ class SweepStatus:
         res = []
 
         l1_index = bisect.bisect_left(self.lines_list,SweepStatusEntry(ipt.l1))
-        if (l1_index == len(self.lines_list)) or (SweepStatusEntry(ipt.l1) != self.lines_list[l1_index]):
+        l1_index = self.find_line(ipt.l1)
+        if (l1_index == None):
+            print("came here 1")
+            print(l1_index,len(self.lines_list))
+            print(SweepStatusEntry(ipt.l1))
+            print(self.lines_list[l1_index])
+            return res
+
+        l2_index = bisect.bisect_left(self.lines_list,SweepStatusEntry(ipt.l2))
+        l2_index = self.find_line(ipt.l2)
+        if (l2_index == None):
+            print("came here 2")
             return res
 
         sw_l1 = SweepStatusEntry(ipt.l1)
         sw_l2 = SweepStatusEntry(ipt.l2)
 
-        if sw_l2 < sw_l1:
-            l2_index = l1_index - 1
-        else:
-            l2_index = l1_index + 1
-        if self.lines_list[l2_index] != SweepStatusEntry(ipt.l2):
-            print("Something is wrong!!")
+        # if sw_l2 < sw_l1:
+        #     l2_index = l1_index - 1
+        # else:
+        #     l2_index = l1_index + 1
+        # if self.lines_list[l2_index] != SweepStatusEntry(ipt.l2):
+        #     print("Something is wrong!!")
+        #     sys.exit(0)
+
+        if abs(l1_index - l2_index) != 1:
+            print("!!!!!!!!ALERT!!!!!!!!")
             sys.exit(0)
 
         print("Swapping indices: ",l1_index,l2_index)
-        print("Lines before swapping: ")
-        print(self.lines_list[l1_index])
-        print(self.lines_list[l2_index])
 
         temp = self.lines_list[l1_index]
         self.lines_list[l1_index] = self.lines_list[l2_index]
@@ -139,6 +162,13 @@ class SweepStatus:
         print("Lines after swapping: ")
         print(self.lines_list[l1_index])
         print(self.lines_list[l2_index])
+
+        if l1_index > l2_index:
+            temp = l1_index
+            l1_index = l2_index
+            l2_index = temp
+
+        # now l1_index is the lower index
 
         res.extend(self.check_intersection(l1_index,"left"))
         res.extend(self.check_intersection(l2_index,"right"))
