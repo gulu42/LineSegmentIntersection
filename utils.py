@@ -107,6 +107,9 @@ class Point:
     def __ne__(self,other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash((get_round_decimal(self.x),get_round_decimal(self.y)))
+
 # not setting the variables externally, once set they are not going to be changed
 
 class Line:
@@ -152,7 +155,7 @@ class Line:
 class LineSet:
     def __init__(self,file_name):
         self.lines = []
-        fh = open("data_files/" + file_name,"r")
+        fh = open(file_name,"r")
 
         s = fh.readline()
         while s != '':
