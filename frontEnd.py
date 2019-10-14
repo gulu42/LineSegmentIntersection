@@ -5,6 +5,7 @@ import sys
 import time
 import config
 from optparse import OptionParser
+import random
 
 # 0 if all points are paired
 # 1 if there is an un-paired point
@@ -12,7 +13,7 @@ points_modulo = 0
 px = 0
 py = 0
 num = 0
-epsi = 0.1
+epsi = 0.01
 
 INP_FILE = "data_files/input_data.txt"
 
@@ -42,8 +43,15 @@ def input_lines(event):
       points_modulo = 1
    else:
       points_modulo = 0
-      config.drawing_board.create_line(px+epsi,py+epsi,event.x+epsi,event.y+epsi)
-      fh.write(str(px) + " " + str(py) + " " + str(event.x) + " " + str(event.y) + "\n")
+      dir = []
+      for i in range(4):
+         dir.append(random.choice([-1,1]))
+      config.drawing_board.create_line(px,py,event.x,event.y)
+      if py == event.y: #it's a line parallel to the x axis
+         dir[1] = 1
+         dir[3] = -1
+      fh.write(str(px+(dir[0] * epsi)) + " " + str(py+(dir[1] * epsi)) + " " + str(event.x+(dir[2] * epsi)) + " " + str(event.y+(dir[3] * epsi)) + "\n")
+      print("Saving line: " + str(px+(dir[0] * epsi)) + " " + str(py+(dir[1] * epsi)) + " " + str(event.x+(dir[2] * epsi)) + " " + str(event.y+(dir[3] * epsi)) + "\n")
       # write the line correcting for x and y
 
 def draw_sweep_line(p):
