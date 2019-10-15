@@ -1,5 +1,4 @@
 from utils import *
-from drawing_functions import draw_sweep_line
 import bisect
 import sys
 import math
@@ -120,38 +119,19 @@ class SweepStatus:
 
     def intersection_point(self,ipt):
         print("Reached intersection point ",ipt)
-        print("hulala")
         res = []
 
-        l1_index = bisect.bisect_left(self.lines_list,SweepStatusEntry(ipt.l1))
         l1_index = self.find_line(ipt.l1)
         if (l1_index == None):
-            print("came here 1")
-            print(l1_index,len(self.lines_list))
-            print(SweepStatusEntry(ipt.l1))
             print(self.lines_list[l1_index])
             return res
 
-        l2_index = bisect.bisect_left(self.lines_list,SweepStatusEntry(ipt.l2))
         l2_index = self.find_line(ipt.l2)
         if (l2_index == None):
-            print("came here 2")
             return res
 
         sw_l1 = SweepStatusEntry(ipt.l1)
         sw_l2 = SweepStatusEntry(ipt.l2)
-
-        # if sw_l2 < sw_l1:
-        #     l2_index = l1_index - 1
-        # else:
-        #     l2_index = l1_index + 1
-        # if self.lines_list[l2_index] != SweepStatusEntry(ipt.l2):
-        #     print("Something is wrong!!")
-        #     sys.exit(0)
-
-        if abs(l1_index - l2_index) != 1:
-            print("!!!!!!!!ALERT!!!!!!!!")
-            sys.exit(0)
 
         print("Swapping indices: ",l1_index,l2_index)
 

@@ -2,6 +2,7 @@ import math
 import sys
 from decimal import *
 import bisect
+import config
 
 COLINEAR = 0
 CLOCKWISE = 1
@@ -28,6 +29,9 @@ def key_points_y(p):
 # --------------------- other functions ---------------------
 def get_round_decimal(x):
     return round(Decimal.from_float(x+0.0),2)
+
+def draw_sweep_line(p):
+   config.sweep_y.append(p)
 
 # Derived from the slopes of the lines
 def check_orientation(p,q,r):
@@ -132,7 +136,7 @@ class Line:
         x1,y1 = self.top_point.x,self.top_point.y
         x2,y2 = self.btm_point.x,self.btm_point.y
 
-        if x1 == x2: #points perpendicular to the x axis
+        if x1 == x2: #line perpendicular to the x axis
             self.m = None
             self.c = None
         else:
