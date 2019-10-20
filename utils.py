@@ -92,6 +92,11 @@ def intersection_point(l1,l2):
 
     return None
 
+def binary_search(l,x):
+    i = bisect.bisect_left(l,x)
+    if i != len(l) and l[i] == x:
+        return i
+    return None
 
 # --------------------- Geometric Artifacts ---------------------
 class Point:
@@ -100,7 +105,7 @@ class Point:
         self.y = y
 
     def __str__(self):
-        return "Point: (" + str(self.x) + ", " + str(self.y) + ")"
+        return "Point(" + str(self.x) + ", " + str(self.y) + ")"
 
     def __eq__(self,other):
         x1,y1 = get_round_decimal(self.x),get_round_decimal(self.y)
@@ -144,7 +149,7 @@ class Line:
             self.c = (-1 * x1 * self.m) + y1
 
     def __str__(self):
-        return "Line: " + str(self.top_point) + " ; " + str(self.btm_point)
+        return "Line{ " + str(self.top_point) + " ; " + str(self.btm_point) + " }"
 
     def __eq__(self,other):
         if (self.top_point == other.top_point) and (self.btm_point == other.btm_point):
@@ -153,7 +158,6 @@ class Line:
 
     def __ne__(self,other):
         return not self.__eq__(other)
-
 
 # --------------------- Collections ---------------------
 # The set of input lines, read out of the file

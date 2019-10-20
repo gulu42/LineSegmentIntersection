@@ -2,6 +2,7 @@ from utils import *
 import bisect
 import sys
 import math
+from sortedcontainers import SortedList
 
 class SweepStatusEntry:
     def __init__(self,l):
@@ -32,15 +33,17 @@ class SweepStatusEntry:
 
 class SweepStatus:
     def __init__(self):
-        self.lines_list = []
+        self.lines_list = SortedList()
         # all lines as seen by the sweep line
 
     def find_line(self,l):
-        for i in range(len(self.lines_list)):
-            if self.lines_list[i].l == l:
-                return i
-
-        return None
+        t = SweepStatusEntry(l)
+        return binary_search(self.lines_list,t)
+        # for i in range(len(self.lines_list)):
+        #     if self.lines_list[i].l == l:
+        #         return i
+        #
+        # return None
 
     def check_intersection(self,l_index,direction):
         res = []
@@ -123,7 +126,7 @@ class SweepStatus:
 
         l1_index = self.find_line(ipt.l1)
         if (l1_index == None):
-            print(self.lines_list[l1_index])
+            # print(self.lines_list[l1_index])
             return res
 
         l2_index = self.find_line(ipt.l2)
