@@ -5,12 +5,12 @@ import math
 from sortedcontainers import SortedList
 
 class SweepStatusEntry:
-    def __init__(self,l):
-        # have a line and the point by which it needs to be sorted
+    def __init__(self,l,k):
         self.l = l
+        self.k = k
 
     def __str__(self):
-        return "SwapStatusEntry: " + str(self.l)
+        return "SwapStatusEntry: " + str(self.k) + " -> " + str(self.l)
 
     # define comparision operations to keep in the sweep status entry
     def __eq__(self,other):
@@ -34,16 +34,17 @@ class SweepStatusEntry:
 class SweepStatus:
     def __init__(self):
         self.lines_list = SortedList()
+        self.num_lines = 0
         # all lines as seen by the sweep line
 
     def find_line(self,l):
-        t = SweepStatusEntry(l)
-        return binary_search(self.lines_list,t)
-        # for i in range(len(self.lines_list)):
-        #     if self.lines_list[i].l == l:
-        #         return i
-        #
-        # return None
+        # can replace this with a binary search
+        # return binary_search(self.lines_list,SweepStatusEntry(l,-1))
+        for i in range(len(self.lines_list)):
+            if self.lines_list[i].l == l:
+                return i
+
+        return None
 
     def check_intersection(self,l_index,direction):
         res = []
@@ -80,18 +81,22 @@ class SweepStatus:
         res = []
 
         # insert new one in place
-        new_entry = SweepStatusEntry(new_l)
-
-        if len(self.lines_list) == 2:
-            print(">> Comparing sweep line stuff <<")
+        new_entry = SweepStatusEntry(new_l,-1)
 
         new_index = bisect.bisect(self.lines_list,new_entry)
         print(new_index)
-        self.lines_list = self.lines_list[:new_index] + [new_entry] + self.lines_list[new_index:]
+
+        new_key = self.num_lines + 1
+        self.num_lines += 1
+        self.lines_list.add(SweepStatusEntry(new_l,new_key))
+        # search is independent of the key
+        # need the key to keep the line rooted in place
+
         print("lines list after adding")
         for i in self.lines_list:
             print(i)
             print()
+
 
         res.extend(self.check_intersection(new_index,"left"))
         res.extend(self.check_intersection(new_index,"right"))
@@ -102,16 +107,12 @@ class SweepStatus:
         print("Removing line ",l)
         res = []
 
-        l_index = -1
-        for i in range(len(self.lines_list)):
-            if self.lines_list[i].l == l:
-                l_index = i
-                break
-        if l_index == -1:
+        l_index = self.find_line(l)
+        if l_index is None:
             return res
 
         # remove the line found
-        self.lines_list = self.lines_list[:l_index] + self.lines_list[l_index+1:]
+        self.lines_list.pop(l_index)
 
         # check for new intersections
         if(len(self.lines_list) != 0):
@@ -126,21 +127,15 @@ class SweepStatus:
 
         l1_index = self.find_line(ipt.l1)
         if (l1_index == None):
-            # print(self.lines_list[l1_index])
             return res
 
         l2_index = self.find_line(ipt.l2)
         if (l2_index == None):
             return res
 
-        sw_l1 = SweepStatusEntry(ipt.l1)
-        sw_l2 = SweepStatusEntry(ipt.l2)
-
         print("Swapping indices: ",l1_index,l2_index)
-
-        temp = self.lines_list[l1_index]
-        self.lines_list[l1_index] = self.lines_list[l2_index]
-        self.lines_list[l2_index] = temp
+        self.lines_list[l1_index].l = ipt.l2
+        self.lines_list[l2_index].l = ipt.l1
 
         print("Lines after swapping: ")
         print(self.lines_list[l1_index])

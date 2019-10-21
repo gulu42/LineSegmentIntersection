@@ -3,6 +3,8 @@ import sys
 from decimal import *
 import bisect
 import config
+from sortedcontainers import SortedList
+from sortedcontainers import SortedSet
 
 COLINEAR = 0
 CLOCKWISE = 1
@@ -31,7 +33,7 @@ def get_round_decimal(x):
     return round(Decimal.from_float(x+0.0),2)
 
 def draw_sweep_line(p):
-   config.sweep_y.append(p)
+   config.sweep_y.append(DrawSweepLinePoint(p))
 
 # Derived from the slopes of the lines
 def check_orientation(p,q,r):
@@ -92,6 +94,7 @@ def intersection_point(l1,l2):
 
     return None
 
+
 def binary_search(l,x):
     i = bisect.bisect_left(l,x)
     if i != len(l) and l[i] == x:
@@ -105,7 +108,7 @@ class Point:
         self.y = y
 
     def __str__(self):
-        return "Point(" + str(self.x) + ", " + str(self.y) + ")"
+        return "Point: (" + str(self.x) + ", " + str(self.y) + ")"
 
     def __eq__(self,other):
         x1,y1 = get_round_decimal(self.x),get_round_decimal(self.y)
@@ -121,6 +124,16 @@ class Point:
         return hash((get_round_decimal(self.x),get_round_decimal(self.y)))
 
 # not setting the variables externally, once set they are not going to be changed
+
+class DrawSweepLinePoint(Point):
+    def __init__(self,p):
+        super().__init__(int(p.x),int(p.y))
+
+    def __lt__(self,other):
+        return self.y > other.y
+
+    def __gt__(self,other):
+        return self.y < other.y
 
 class Line:
     def __init__(self,p1,p2):
@@ -149,7 +162,7 @@ class Line:
             self.c = (-1 * x1 * self.m) + y1
 
     def __str__(self):
-        return "Line{ " + str(self.top_point) + " ; " + str(self.btm_point) + " }"
+        return "Line: " + str(self.top_point) + " ; " + str(self.btm_point)
 
     def __eq__(self,other):
         if (self.top_point == other.top_point) and (self.btm_point == other.btm_point):
@@ -158,6 +171,13 @@ class Line:
 
     def __ne__(self,other):
         return not self.__eq__(other)
+
+    def __lt__(self,other):
+        return self.btm_point.y > other.btm_point.y
+
+    def __gt__(self,other):
+        return self.btm_point.y < other.btm_point.y
+
 
 # --------------------- Collections ---------------------
 # The set of input lines, read out of the file
@@ -184,9 +204,7 @@ class LineSet:
     def pop(self):
         if len(self.lines) == 0:
             raise EmptyCollectionException
-        top_line = self.lines[0]
-        self.lines = self.lines[1:]
-        return top_line
+        return self.lines.pop(0)
 
     def __str__(self):
         s = "--- Line Set: ---\n"
@@ -199,7 +217,7 @@ class LineSet:
 # The collection of lines already visited, so that they can be removed from the sweep line
 class SortedCollection:
     def __init__(self):
-        self.items = []
+        self.items = SortedList()
 
     def get_len(self):
         return len(self.items)
@@ -212,20 +230,15 @@ class SortedCollection:
     def pop(self):
         if len(self.items) == 0:
             raise EmptyCollectionException
-        top_item = self.items[0]
-        self.items = self.items[1:]
-        return top_item
+        return self.items.pop(0)
 
     def add(self,l):
-        self.items.extend(l)
+        print("Type info: " + str(type(self.items)) + str(type(l)))
+        self.items.update(l)
 
 class VisitedLineSet(SortedCollection):
     def __init__(self):
         super().__init__()
-
-    def add(self,l):
-        self.items.extend(l)
-        self.items = sorted(self.items,key = key_lines_end_point_y,reverse = True)
 
     def __str__(self):
         s = "--- Visited Line Set: ---\n"
@@ -249,13 +262,22 @@ class IntersectionPoint:
         return ">>Intersection Point<<\n" + str(self.ipt) + "\n" + str(self.l1) + "\n" + str(self.l2)
 
     def __eq__(self,other):
-        # if self.ipt == other.ipt and self.l1 == other.l1 and self.l2 == other.l2:
         if self.ipt == other.ipt:
             return True
         return False
 
     def __ne__(self,other):
         return not self.__eq__(other)
+
+    # want a reverse ordering, so flipped the operators
+    def __lt__(self,other):
+        return self.key() > other.key()
+
+    def __gt__(self,other):
+        return self.key() < other.key()
+
+    def __hash__(self):
+        return hash(self.ipt)
 
 class IntersectionPointsSet(SortedCollection):
     def __init__(self):
@@ -265,9 +287,8 @@ class IntersectionPointsSet(SortedCollection):
     def add(self,l):
         for i in l:
             if i not in self.all_visited_points:
-                self.items.append(i)
+                self.items.add(i)
                 self.all_visited_points.append(i)
-        self.items = sorted(self.items,key = lambda x: x.key(),reverse = True)
 
     def __str__(self):
         s = "--- Intersection Points Set: ---\n"

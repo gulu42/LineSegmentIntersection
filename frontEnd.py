@@ -70,7 +70,7 @@ def run_eval():
       print(p)
 
    delay = 0
-   delay_amount =200
+   delay_amount =2
    num_artifacts = 2#drawing two things and the first one is the line
    n = config.drawing_board.create_oval(0,0,1,1)
    points_drawn = dict()
