@@ -58,7 +58,7 @@ def draw_sweep_line(p):
    config.drawing_board.create_line(0,p.y,config.canvas_width-1,p.y,fill="green")
    draw_point(p.x,p.y)
 
-def run_eval():
+def run_eval(delay_param=200):
    print("Evaluation running")
    fh.close()
 
@@ -70,7 +70,7 @@ def run_eval():
       print(p)
 
    delay = 0
-   delay_amount =200
+   delay_amount =delay_param
    num_artifacts = 2#drawing two things and the first one is the line
    n = config.drawing_board.create_oval(0,0,1,1)
    points_drawn = dict()
@@ -103,7 +103,6 @@ def clear_canvas():
 def save_input():
    global num
 
-   print("Inside here")
    print("num = ",num)
 
    with open("data_files/input_data.txt") as f:
@@ -121,12 +120,16 @@ if __name__ == "__main__":
    parser = OptionParser()
 
    parser.add_option('--inp',dest='inp_file',type=str,help='File from which input is to be loaded')
-   parser.add_option('-n',dest='test_case_num',type=int)
+   parser.add_option('-n',dest='test_case_num',type=int,help='The number to be assigned to the testcase file where the input will be saved')
+   parser.add_option('--disp_delay',dest='disp_delay',type=int,help='The delay between two positions of the sweep line on the GUI')
 
    options, otherjunk = parser.parse_args(sys.argv[1:])
    if len(otherjunk) != 0:
        raise Exception('Command line input not understood: ' + str(otherjunk))
    print(options.inp_file,type(options.inp_file))
+
+   if options.disp_delay is None:
+      options.disp_delay = 200
 
    if options.test_case_num is None:
       num = 0
@@ -138,7 +141,7 @@ if __name__ == "__main__":
    config.drawing_board.bind("<Button-1>",input_lines)
    # config.drawing_board.bind("<Button-1>",temp_testing)
 
-   start_button = Button(config.master,text = "Start Evaluation",command = run_eval)
+   start_button = Button(config.master,text = "Start Evaluation",command = lambda: run_eval(delay_param=options.disp_delay))
    start_button.pack(side = LEFT)
 
    clear_all_button = Button(config.master,text = "Clear Screen",command = clear_canvas)
